@@ -1,0 +1,307 @@
+//WJ.H
+//we stole most of this from hampton btw
+#define RIGHT_LINE 0
+#define LEFT_LINE 1
+#define RIGHT_MOTOR 0 //Motor ports
+#define LEFT_MOTOR 3
+#define TAPE 2000
+#define TAPEPORT 3
+#define TAPEPORTBOOG 4
+#define DISTPRT 0
+#define ARMPORT 0 //TODO: Label ur stoopid constants
+#define ARMDOWN 560
+//#define ARMUP 1427
+#define ARMUP 1560
+#define BUMPPORT 0
+#define CLAWPORT 1
+#define CLAWCLOSED 0
+#define CLAWHALFOPEN 650
+#define CLAWOPEN 1500
+#define CLAWSTART 1550 //40 mm from metal to pvc for start wheel is 79 mm from edge of
+black line
+#define Parlell 300
+#define PI 3.14159
+#define TICKS_PER_CM 100 //for DRIVE functions
+#define PI 3.14159 //for TURNING functions
+#define LTICKS 1800 //Left and right motor ticks per revolution
+#define RTICKS 2000
+#define WHEELBASE 9.5 //Wheelbase of the robot
+#define LINEFOLLOWCORR 11.5 //percentage correction
+#define CUPCLOSE 750
+#define CUPUP 750
+//////// Utility
+float max(float a, float b){ //return max of two values
+return a > b ? a : (b > a ? b : 0);
+}
+/*float abs(float n){
+return n > 0 ? n : (n < 0 ? -n : 0);
+}*/
+float sign(float x){
+return x > 0 ? 1 : (x < 0 ? -1 : 0);
+}
+//////// Motor convenience functions
+double motor_dist(int port) {
+return get_motor_position_counter(port) / TICKS_PER_CM;
+}
+int get_absolute_average_motor_position_counter(int motor1, int motor2){
+return ((abs(get_motor_position_counter(motor1)) +
+abs(get_motor_position_counter(motor2)))/2);
+}
+int get_average_motor_position_counter(int motor1, int motor2){
+return ((get_motor_position_counter(motor1) + get_motor_position_counter(motor2))/2);
+}
+//////// Core movement functions
+void anticlockwise_turn(int deg, int spd, int comp, int thresh){
+printf("CCW turn\n");
+float fDeg = (float) deg;
+float fThresh=(float)thresh * .01; //Thresh is in 100ts of a rotation
+int error = 0;
+int lCount = 0;
+int rCount = 0;
+clear_motor_position_counter(LEFT_MOTOR);
+clear_motor_position_counter(RIGHT_MOTOR);
+int dis = (int)((PI* WHEELBASE) * (abs(fDeg)/360.0) * TICKS_PER_CM);
+while(get_absolute_average_motor_position_counter(LEFT_MOTOR, RIGHT_MOTOR) <
+dis){ //the robot has not reached its destination
+lCount =(int) (get_motor_position_counter(LEFT_MOTOR) * (1.0/LTICKS)); //convert to
+rotations
+rCount =(int) (get_motor_position_counter(RIGHT_MOTOR) * (1.0/RTICKS)); //convert to
+rotations
+error += (rCount - lCount); //calculate the cumulative error, the "I" constant
+if(error>fThresh) {//if the right motor has gone farther, causing a leftward arc
+printf("Error left, corr right\n");
+motor(LEFT_MOTOR, -(spd));
+motor(RIGHT_MOTOR, (spd-comp));
+} else if(error < -fThresh) {//if the left motor has gone farther, causing a rightward arc
+printf("Error right, corr left\n");
+motor(LEFT_MOTOR, -(spd-comp));
+motor(RIGHT_MOTOR, (spd));
+} else {
+printf("~No Correction~\n");
+motor(LEFT_MOTOR, -(spd));
+motor(RIGHT_MOTOR, (spd));
+}
+msleep(50); //cycles 20 times per second
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+Haha penis 8====>
+void clockwise_turn(int deg, int spd, int comp, int thresh){
+printf("CW turn\n");
+float fDeg = (float) deg;
+float fThresh= (float) thresh *.01; //Thresh is in 100ts of a rotation
+int error = 0;
+int lCount = 0;
+int rCount = 0;
+clear_motor_position_counter(LEFT_MOTOR);
+clear_motor_position_counter(RIGHT_MOTOR);
+int dis = (int)((PI* WHEELBASE) * (abs(fDeg)/360.0) * TICKS_PER_CM);
+while(get_absolute_average_motor_position_counter(LEFT_MOTOR, RIGHT_MOTOR) <
+dis){ //the robot has not reached its destination
+lCount = (int) (get_motor_position_counter(LEFT_MOTOR) * (1.0/LTICKS)); //convert to
+rotations
+rCount = (int) (get_motor_position_counter(RIGHT_MOTOR) * (1.0/RTICKS)); //convert to
+rotations
+error += (rCount - lCount); //calculate the cumulative error, the "I" constant
+if(error>fThresh) {//if the right motor has gone farther, causing a leftward arc
+printf("Error left, corr right\n");
+motor(LEFT_MOTOR, (spd));
+motor(RIGHT_MOTOR, -(spd-comp));
+} else if(error < -fThresh) {//if the left motor has gone farther, causing a rightward arc
+printf("Error right, corr left\n");
+motor(LEFT_MOTOR, (spd-comp));
+motor(RIGHT_MOTOR, -(spd));
+} else {
+printf("~No correction~\n");
+motor(LEFT_MOTOR, (spd));
+motor(RIGHT_MOTOR, -(spd));
+}
+msleep(50); //cycles 20 times per second
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+
+void forward(double dis, int spd, int comp, int thresh){
+printf("Forward drive\n");
+float fThresh = (float) .001* thresh; //thresh is in 1000ths of a rotation
+int error = 0;
+int lCount = 0;
+int rCount = 0;
+clear_motor_position_counter(LEFT_MOTOR);
+clear_motor_position_counter(RIGHT_MOTOR);
+dis *= TICKS_PER_CM;
+while(get_average_motor_position_counter(LEFT_MOTOR, RIGHT_MOTOR) < dis){ //the
+robot has not reached its destination
+lCount =(int) (get_motor_position_counter(LEFT_MOTOR) * (1.0/LTICKS)); //convert to
+rotations
+rCount =(int) (get_motor_position_counter(RIGHT_MOTOR) * (1.0/RTICKS)); //convert to
+rotations
+error += (rCount - lCount); //calculate the cumulative error, the "I" constant
+if(error>fThresh){//if the right motor has gone farther, causing a leftward arc
+printf("Error left, corr right\n");
+motor(LEFT_MOTOR, spd);
+motor(RIGHT_MOTOR, spd-comp);
+} else if(error < -fThresh){//if the left motor has gone farther, causing a rightward arc
+printf("Error right, corr left\n");
+motor(LEFT_MOTOR, spd-comp);
+motor(RIGHT_MOTOR, spd);
+} else {
+printf("~No correction~\n");
+motor(LEFT_MOTOR, spd);
+motor(RIGHT_MOTOR, spd);
+}
+msleep(50); //cycles 20 times per second
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+void backward(double dis, int spd, int comp, int thresh){
+printf("Backward drive\n");
+float fThresh = (float) .001* thresh; //thresh is in 1000ths of a rotation
+int error = 0;
+int lCount = 0;
+int rCount = 0;
+clear_motor_position_counter(LEFT_MOTOR);
+clear_motor_position_counter(RIGHT_MOTOR);
+dis*= TICKS_PER_CM;
+while(-get_average_motor_position_counter(LEFT_MOTOR, RIGHT_MOTOR) < dis){ //the
+robot has not reached its destination
+lCount =(int) (get_motor_position_counter(LEFT_MOTOR) * (1.0/LTICKS)); //convert to
+rotations
+rCount =(int) (get_motor_position_counter(RIGHT_MOTOR) * (1.0/RTICKS)); //convert to
+rotations
+error += (rCount - lCount); //calculate the cumulative error, the "I" constant
+if(error>fThresh){//if the right motor has gone farther, causing a leftward arc
+printf("Error left, corr right\n");
+motor(LEFT_MOTOR, -spd);
+motor(RIGHT_MOTOR, -spd+comp);
+} else if(error < -fThresh){//if the left motor has gone farther, causing a rightward arc
+printf("Error right, corr left\n");
+motor(LEFT_MOTOR, -spd+comp);
+motor(RIGHT_MOTOR, -spd);
+} else {
+printf("~No correction~\n");
+motor(LEFT_MOTOR, -spd);
+motor(RIGHT_MOTOR, -spd);
+}
+msleep(50); //cycles 20 times per second
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+//////// WJ other movement functions
+void linefollow_dist_double(int dist, int speed){ //Linefollow with two motors
+printf("Linefollow DOUBLE\n");
+clear_motor_position_counter(RIGHT_MOTOR);
+clear_motor_position_counter(LEFT_MOTOR);
+while( motor_dist(RIGHT_MOTOR) < dist || motor_dist(LEFT_MOTOR) < dist ){
+int rsense = analog(RIGHT_LINE);
+int lsense = analog(LEFT_LINE);
+if(rsense > TAPE && lsense < TAPE){
+mav(RIGHT_MOTOR, (speed-LINEFOLLOWCORR)*15);
+mav(LEFT_MOTOR, speed*15);
+printf("Line left, turning right\n");
+}
+if(lsense > TAPE && rsense < TAPE){
+mav(RIGHT_MOTOR, speed*15);
+mav(LEFT_MOTOR, (speed-LINEFOLLOWCORR)*15);
+printf("Line right, turning left\n");
+}
+if( (lsense < TAPE && rsense < TAPE) || (lsense > TAPE && rsense > TAPE) ){
+mav(RIGHT_MOTOR, speed*15);
+mav(LEFT_MOTOR, speed*15);
+printf("Following straight...\n");
+}
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+void linefollow_dist_single(int dist, int speed){ //Linefollow with one one motor
+printf("Linefollow SINGLE\n");
+clear_motor_position_counter(RIGHT_MOTOR);
+clear_motor_position_counter(LEFT_MOTOR);
+while( motor_dist(RIGHT_MOTOR) < dist && motor_dist(LEFT_MOTOR) < dist ){
+int rsense = analog(RIGHT_LINE);
+int lsense = analog(LEFT_LINE);
+if(rsense > TAPE && lsense < TAPE){
+mav(RIGHT_MOTOR, (speed-LINEFOLLOWCORR)*15);
+mav(LEFT_MOTOR, speed*15);
+printf("Line left, turning right\n");
+}
+if(lsense > TAPE && rsense < TAPE){
+mav(RIGHT_MOTOR, speed*15);
+mav(LEFT_MOTOR, (speed-LINEFOLLOWCORR)*15);
+printf("Line right, turning left\n");
+}
+if( (lsense < TAPE && rsense < TAPE) || (lsense > TAPE && rsense > TAPE) ){
+mav(RIGHT_MOTOR, speed*15);
+mav(LEFT_MOTOR, speed*15);
+printf("Following straight...\n");
+}
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+void line_rebound_dist(int dist, int speed, int correction){ //gonna be bouncy boi
+clear_motor_position_counter(RIGHT_MOTOR);
+clear_motor_position_counter(LEFT_MOTOR);
+while(motor_dist(RIGHT_MOTOR) < dist && motor_dist(LEFT_MOTOR) < dist){
+int sense = digital(BUMPPORT);
+if(sense == 1){ //Hit the wall
+mav(LEFT_MOTOR, speed * 15);
+mav(RIGHT_MOTOR, (speed-correction) * 15);
+} else{
+mav(LEFT_MOTOR, (speed-correction)*15);
+mav(RIGHT_MOTOR, speed*15);
+}
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+void drive_arc(int dist, int speed, int speed2){ //Drive in a curve with two different motor
+speeds
+printf("Drive arc\n");
+clear_motor_position_counter(RIGHT_MOTOR);
+clear_motor_position_counter(LEFT_MOTOR);
+if (dist > 0) {
+while( motor_dist(RIGHT_MOTOR) < dist && motor_dist(LEFT_MOTOR) < dist ){
+mav(RIGHT_MOTOR, speed2*15);
+mav(LEFT_MOTOR, speed*15);
+}
+} else {
+while( motor_dist(RIGHT_MOTOR) > dist && motor_dist(LEFT_MOTOR) > dist ){
+mav(RIGHT_MOTOR, -speed2*15);
+mav(LEFT_MOTOR, -speed*15);
+}
+}
+freeze(RIGHT_MOTOR);
+freeze(LEFT_MOTOR);
+}
+//////// Simplified sub-callers
+void turn(int deg, int speed){
+int corr = 10;
+int thresh = 1;
+if(deg > 0) anticlockwise_turn(deg, speed, corr, thresh);
+else clockwise_turn(-deg, speed, corr, thresh);
+}
+void drive(double dist, int speed) {
+if (dist > 0) forward(dist, speed, 15, 0);
+if (dist < 0) backward(-dist, speed, 15, 0);
+}
+void slow_servo(int servo, int pos, int time){
+printf("Slow Servo...\n");
+const double ticks = 25;
+const int startPos = get_servo_position(servo);
+printf("servo start pos: %d\n", startPos);
+int i = 0;
+for(i = 0; i < ticks; i++){
+int newPos = pos * (i/ticks) + startPos * ((ticks-i) / ticks);
+//printf("pos: %d\n", newPos);
+set_servo_position(servo, newPos);
+msleep(time / ticks);
+}
+}
+
+
