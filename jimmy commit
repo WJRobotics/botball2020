@@ -1,5 +1,5 @@
 //WJ.H
-//we stole most of this from hampton btw
+
 #define RIGHT_LINE 0
 #define LEFT_LINE 1
 #define RIGHT_MOTOR 0 //Motor ports
