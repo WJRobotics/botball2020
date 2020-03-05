@@ -304,4 +304,82 @@ msleep(time / ticks);
 }
 }
 
+//MAIN
+#include <kipr/botball.h>
+#include <wj.h>
+#define LEFT_WHEEL 0
+#define RIGHT_WHEEL 3
+#define LEFT_SENSOR 3
+#define RIGHT_SENSOR 5
+#define ARM 0
+#define CLAW 1
+#define ARM_UP 1800
+#define ARM_PARALLEL 400
+#define ARM_DOWN 0
+#define ARM_PAUSE1 100
+#define CLAW_OPEN 2040
+#define CLAW_CLOSE 200
+#define CLAW_PAUSE1 1500
+#define CLAW_PAUSE2 800
+
+#define BLACK 4010
+#define WHITE 2625
+
+int main()
+{
+    set_servo_position(0,ARM_UP);
+    
+    enable_servo(0);
+    enable_servo(1);
+    
+    //go forward till tape
+    mav(RIGHT_WHEEL, 600);
+    mav(LEFT_WHEEL, 600);
+    while (analog(RIGHT_SENSOR) < BLACK) {
+        //move a bit then check
+        
+    	printf("owo hewwo \n");
+    }
+    
+    drive_arc(12,50,25);
+        //distance is currently in inches; double check if it should be in inches or not
+        //arc grabs material processor/coupler
+    turn(-70, 30);
+    drive(36, 50);
+    drive(-36,50);
+    turn(70,30);
+    // going up ramp
+    drive(21,50);
+    turn(90, 30);
+    drive(-30,50);
+    //get claw to go down
+   	//get claw to grab
+    drive(-10,50);
+    //lower claw
+    //open claw
+    //raise claw fully
+    drive(-7, 50);
+    turn(90,30);
+    //drop poms here
+    turn(-90,30);
+    drive(-3,50);
+    turn(90,30);
+    turn(-90,30);
+    drive(-3,50);
+    turn(90,30);
+    turn(-90,30);
+    drive(-3,50);
+    turn(90,30);
+    
+    
+    printf("kbye \n");
+    
+    //turn off
+    
+    ao();
+    disable_servos();
+    return 0;
+}
+
+
 
