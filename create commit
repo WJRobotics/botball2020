@@ -1,1 +1,82 @@
+//Main.c
+
+#include <kipr/botball.h>
+#include <wj.h>
+#define CLAWRANGE (CLAWOPEN-CLAWCLOSED)
+#define CLAWBIGOPEN 1800
+
+int main()
+{
+  	//le begin le program
+  	create_connect();
+  	set_servo_position(CLAWPORT, CLAWCLOSED);
+  	enable_servos();
+  
+  //testing purposes
+/*	while(1)
+    {
+      msleep(100);
+      printf("%i",get_create_lbump());
+      printf("%i",get_create_rbump());
+    } 
+*/  
+  
+  	//bump into the mines initially
+  	create_drive(150, 0);
+  	while(get_create_lbump() == 0 && get_create_rbump() == 0)
+    {  
+  		 msleep(100);
+    }
+  	create_stop();	
+  	msleep(1000);
+  	
+  	//turn 45 degrees towards proccessors
+  	create_spin_CW(100); //turn 90 left = spin(100) & msleep(1500)?
+  	msleep(750);
+  	create_stop();
+  
+  	//open claw
+  	set_servo_position(CLAWPORT, CLAWOPEN);
+  
+  	//go towards proccessors
+  	create_drive_straight(-100);
+  	msleep(4500);
+  	create_stop();
+  	
+  	//grabs stuffs
+  	int degrees = 0;
+  	
+  	for(degrees; degrees < 90; degrees++)
+    {
+      int range = CLAWOPEN-(degrees*((CLAWRANGE)/(90)));
+      create_spin_CCW(100); //turn 1 degree?
+      msleep(15);
+      create_stop();
+      printf("%i", range);
+      if(degrees < 60) 
+     {
+      if(range > CLAWOPEN) set_servo_position(CLAWPORT, CLAWCLOSED);
+     // else if (range < 600) set_servo_position(CLAWPORT, 600);
+      else set_servo_position(CLAWPORT, range); 
+      }
+     // create_drive_straight(100);
+     // msleep(10);
+    }
+  	
+/*  	create_drive_straight(-100);
+  	msleep(1500);
+  	create_stop();
+  	set_servo_position(CLAWPORT, CLAWBIGOPEN);
+  	create_drive_straight(-100);
+  	msleep(1500);
+  	create_stop(); */
+  
+  	//le end le program
+  	set_servo_position(CLAWPORT, CLAWCLOSED);
+  	msleep(1000);
+  	disable_servos();
+  	create_disconnect();
+    return 0;
+}
+
 
